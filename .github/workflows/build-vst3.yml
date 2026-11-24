@@ -1,4 +1,4 @@
-name: Build VocalClarity VST3
+name: Build VoxClarity VST3
 on:
   workflow_dispatch:
   push:
@@ -6,7 +6,8 @@ on:
       - 'CMakeLists.txt'
       - 'Source/**'
       - 'README.md'
-      - 'demo.html'
+      - 'LICENSE'
+      - 'THIRD_PARTY_NOTICES.md'
       - '.github/workflows/build-vst3.yml'
 permissions:
   contents: read
@@ -16,21 +17,24 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-      - name: Configure JUCE project
-        run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release
+      - name: Configure JUCE and RNNoise project
+        run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DRNNOISE_BUILD_TESTS=OFF -DRNNOISE_BUILD_EXAMPLES=OFF
       - name: Build VST3
-        run: cmake --build build --config Release --target VocalClarity_VST3
-      - name: Package plugin
+        run: cmake --build build --config Release --target VoxClarity_VST3
+      - name: Package plugin with license notices
         shell: pwsh
         run: |
-          $plugin = Get-ChildItem -Path build -Directory -Filter 'VocalClarity.vst3' -Recurse | Select-Object -First 1
-          if (-not $plugin) { throw 'VocalClarity.vst3 bundle not found' }
-          Compress-Archive -Path $plugin.FullName -DestinationPath VocalClarity-Windows-x64-VST3.zip -Force
+          $plugin = Get-ChildItem -Path build -Directory -Filter 'VoxClarity.vst3' -Recurse | Select-Object -First 1
+          if (-not $plugin) { throw 'VoxClarity.vst3 bundle not found' }
+          New-Item -ItemType Directory -Force -Path package | Out-Null
+          Copy-Item -Recurse -LiteralPath $plugin.FullName -Destination package
+          Copy-Item README.md,LICENSE,THIRD_PARTY_NOTICES.md package
+          Compress-Archive -Path package/* -DestinationPath VoxClarity-Windows-x64-VST3.zip -Force
       - name: Upload VST3 artifact
         uses: actions/upload-artifact@v4
         with:
-          name: VocalClarity-Windows-x64-VST3
-          path: VocalClarity-Windows-x64-VST3.zip
+          name: VoxClarity-Windows-x64-VST3
+          path: VoxClarity-Windows-x64-VST3.zip
           if-no-files-found: error
           retention-days: 30
 
