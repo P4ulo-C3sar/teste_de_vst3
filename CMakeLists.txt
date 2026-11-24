@@ -27,5 +27,6 @@ juce_add_plugin(VocalClarity
 juce_generate_juce_header(VocalClarity)
 target_sources(VocalClarity PRIVATE Source/PluginProcessor.cpp Source/PluginEditor.cpp)
 target_compile_features(VocalClarity PRIVATE cxx_std_17)
-target_compile_definitions(VocalClarity PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
+target_compile_definitions(VocalClarity PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0)
 target_link_libraries(VocalClarity PRIVATE juce::juce_audio_utils juce::juce_dsp PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags juce::juce_recommended_warning_flags)
+
