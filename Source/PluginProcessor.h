@@ -2,6 +2,7 @@
 #include <JuceHeader.h>
 #include <array>
 #include <memory>
+#include <vector>
 #include <rnnoise.h>
 class VoxClarityProcessor final : public juce::AudioProcessor {
 public:
@@ -35,8 +36,8 @@ private:
   float gateEnvelope = 0.0f;
   size_t outputRead = 0;
   size_t outputWrite = 0;
+  size_t outputAvailable = 0;
   std::array<std::vector<float>, 2> outputRing;
-  juce::AudioBuffer<float> workBuffer;
-  juce::AudioBuffer<float> processedBuffer;
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VoxClarityProcessor)
 };
+
