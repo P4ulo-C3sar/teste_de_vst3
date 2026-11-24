@@ -20,11 +20,10 @@ bool VoxClarityProcessor::isBusesLayoutSupported(const BusesLayout& l) const {
 }
 void VoxClarityProcessor::prepareToPlay(double sr, int maxBlock) {
   for (auto*& state : rnStates) { if (state) rnnoise_destroy(state); state = nullptr; }
-  framePosition = 0; gateEnvelope = 0.f; outputRead = outputWrite = 0;
+  framePosition = 0; gateEnvelope = 0.f; outputRead = outputWrite = outputAvailable = 0;
   for (auto& frame : channelFrames) frame.fill(0.f);
   for (auto& frame : channelOutputs) frame.fill(0.f);
   for (auto& ring : outputRing) ring.assign(size_t(maxBlock + 480 + 2), 0.f);
-  workBuffer.setSize(getTotalNumInputChannels(), maxBlock);
   if (std::abs(sr - 48000.0) <= 1.0) {
     for (int c = 0; c < getTotalNumInputChannels(); ++c) rnStates[size_t(c)] = rnnoise_create(nullptr);
     setLatencySamples(480);
@@ -55,19 +54,20 @@ void VoxClarityProcessor::processBlock(juce::AudioBuffer<float>& b, juce::MidiBu
         outputRing[size_t(c)][dst] = (diff ? dry - cleaned : cleaned * gateGain) * outputGain;
       }
       outputWrite = (outputWrite + 480) % capacity;
+      outputAvailable += 480;
       framePosition = 0;
     }
-    const bool ready = outputWrite != outputRead;
+    const bool ready = outputAvailable > 0;
     for (int c = 0; c < channels; ++c) {
       const float dry = b.getSample(c, i);
       const float wet = ready ? outputRing[size_t(c)][outputRead] : 0.f;
-      workBuffer.setSample(c, i, dry * (1.f - mix) + wet * mix);
+      b.setSample(c, i, dry * (1.f - mix) + wet * mix);
     }
-    outputRead = (outputRead + 1) % capacity;
+    if (ready) { outputRead = (outputRead + 1) % capacity; --outputAvailable; }
   }
-  for (int c = 0; c < channels; ++c) b.copyFrom(c, 0, workBuffer, c, 0, n);
 }
 juce::AudioProcessorEditor* VoxClarityProcessor::createEditor() { return new VoxClarityEditor(*this); }
 void VoxClarityProcessor::getStateInformation(juce::MemoryBlock& m) { if (auto x = parameters.copyState().createXml()) copyXmlToBinary(*x, m); }
 void VoxClarityProcessor::setStateInformation(const void* d, int n) { if (auto x = getXmlFromBinary(d, n)) parameters.replaceState(juce::ValueTree::fromXml(*x)); }
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new VoxClarityProcessor(); }
+
