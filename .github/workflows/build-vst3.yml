@@ -19,7 +19,7 @@ jobs:
       - name: Configure JUCE project
         run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release
       - name: Build VST3
-        run: cmake --build build --config Release --target VocalClarity
+        run: cmake --build build --config Release --target VocalClarity_VST3
       - name: Package plugin
         shell: pwsh
         run: |
@@ -33,3 +33,4 @@ jobs:
           path: VocalClarity-Windows-x64-VST3.zip
           if-no-files-found: error
           retention-days: 30
+
