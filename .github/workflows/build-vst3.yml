@@ -1,0 +1,35 @@
+name: Build VocalClarity VST3
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'CMakeLists.txt'
+      - 'Source/**'
+      - 'README.md'
+      - 'demo.html'
+      - '.github/workflows/build-vst3.yml'
+permissions:
+  contents: read
+jobs:
+  windows-vst3:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Configure JUCE project
+        run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release
+      - name: Build VST3
+        run: cmake --build build --config Release --target VocalClarity
+      - name: Package plugin
+        shell: pwsh
+        run: |
+          $plugin = Get-ChildItem -Path build -Directory -Filter 'VocalClarity.vst3' -Recurse | Select-Object -First 1
+          if (-not $plugin) { throw 'VocalClarity.vst3 bundle not found' }
+          Compress-Archive -Path $plugin.FullName -DestinationPath VocalClarity-Windows-x64-VST3.zip -Force
+      - name: Upload VST3 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VocalClarity-Windows-x64-VST3
+          path: VocalClarity-Windows-x64-VST3.zip
+          if-no-files-found: error
+          retention-days: 30
