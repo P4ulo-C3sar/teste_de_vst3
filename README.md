@@ -8,7 +8,7 @@ O projeto fonte está pronto para build pelo GitHub Actions em `.github/workflow
 
 ## DSP e controles
 
-RNNoise processa blocos de 480 amostras a 48 kHz. O projeto adapta a entrada do host para a taxa de processamento fixa de 48 kHz e informa a latência correspondente ao host. Entrada mono e estéreo são aceitas; estéreo usa detecção no sinal mono e mantém o sinal espacial pela combinação do canal processado com o dry.
+RNNoise processa blocos de 480 amostras a 48 kHz. Esta versão exige que o projeto do FL Studio esteja em 48 kHz; ela silencia a saída em outras taxas porque ainda não inclui conversor de amostragem. Cada canal usa estado independente. O plugin informa latência de 480 amostras. Entrada mono e estéreo são aceitas; estéreo usa detecção no sinal mono e mantém o sinal espacial pela combinação do canal processado com o dry.
 
 - **Strength** — mistura entre sinal original e RNNoise.
 - **Mix** — paralelo entre dry e processado.
@@ -25,7 +25,7 @@ RNNoise pode afetar timbre, consoantes ou vozes mais fracas, dependendo da grava
 3. Baixe o artefato `VoxClarity-Windows-x64-VST3` da execução concluída.
 4. Extraia `VoxClarity.vst3` para a pasta VST3 comum e atualize a lista de plugins do FL Studio.
 
-O build usa JUCE 8.0.12 e RNNoise v0.2, buscados durante a configuração do CMake. GitHub Actions precisa de rede para buscar essas dependências. Compatibilidade final deve ser confirmada carregando o artefato no FL Studio 2026.
+O build usa JUCE 8.0.12 e RNNoise do repositório indicado, buscados durante a configuração do CMake. GitHub Actions precisa de rede para buscar essas dependências. Compatibilidade final deve ser confirmada carregando o artefato no FL Studio 2026.
 
 ## Licença
 
