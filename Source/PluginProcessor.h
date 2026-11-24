@@ -1,16 +1,19 @@
 #pragma once
 #include <JuceHeader.h>
 #include <array>
-class VocalClarityProcessor final : public juce::AudioProcessor {
+#include <memory>
+#include <rnnoise.h>
+class VoxClarityProcessor final : public juce::AudioProcessor {
 public:
-  VocalClarityProcessor();
+  VoxClarityProcessor();
+  ~VoxClarityProcessor() override;
   void prepareToPlay(double, int) override;
   void releaseResources() override {}
   bool isBusesLayoutSupported(const BusesLayout&) const override;
   void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
   juce::AudioProcessorEditor* createEditor() override;
   bool hasEditor() const override { return true; }
-  const juce::String getName() const override { return "VocalClarity"; }
+  const juce::String getName() const override { return "VoxClarity"; }
   bool acceptsMidi() const override { return false; }
   bool producesMidi() const override { return false; }
   bool isMidiEffect() const override { return false; }
@@ -25,10 +28,15 @@ public:
   juce::AudioProcessorValueTreeState parameters;
   static juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
 private:
-  static constexpr int bands = 96;
-  double sampleRate = 44100.0;
-  std::array<std::atomic<float>, bands> learnedNoise{};
-  std::array<std::array<float, bands>, 2> envelope{};
-  juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear> delay{48000};
-  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VocalClarityProcessor)
+  std::array<std::array<float, 480>, 2> channelFrames{};
+  std::array<std::array<float, 480>, 2> channelOutputs{};
+  std::array<DenoiseState*, 2> rnStates{};
+  int framePosition = 0;
+  float gateEnvelope = 0.0f;
+  size_t outputRead = 0;
+  size_t outputWrite = 0;
+  std::array<std::vector<float>, 2> outputRing;
+  juce::AudioBuffer<float> workBuffer;
+  juce::AudioBuffer<float> processedBuffer;
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VoxClarityProcessor)
 };
